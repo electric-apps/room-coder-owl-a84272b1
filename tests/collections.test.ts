@@ -23,13 +23,18 @@ describe("todos collection validation", () => {
 		expect(result.success).toBe(true)
 	})
 
-	it("completed defaults to false", () => {
+	it("completed accepts boolean values", () => {
 		const row = generateValidRow(todoInsertSchema)
-		const result = todoInsertSchema.safeParse({ ...row, completed: undefined })
-		// completed is required notNull, so this should fail if omitted
-		// but with default false in schema it may pass — verify the field validates boolean
-		const withFalse = todoInsertSchema.safeParse({ ...row, completed: false })
-		expect(withFalse.success).toBe(true)
+		// drizzle-zod insert schema makes defaulted fields optional (DB handles the default)
+		// so completed: undefined is accepted
+		const resultUndefined = todoInsertSchema.safeParse({ ...row, completed: undefined })
+		expect(resultUndefined.success).toBe(true)
+		// false and true are both valid
+		const resultFalse = todoInsertSchema.safeParse({ ...row, completed: false })
+		expect(resultFalse.success).toBe(true)
+		if (resultFalse.success) {
+			expect(resultFalse.data.completed).toBe(false)
+		}
 	})
 
 	it("rejects invalid UUID for id", () => {

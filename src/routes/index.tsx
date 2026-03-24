@@ -2,6 +2,7 @@ import {
 	AlertDialog,
 	Badge,
 	Button,
+	Callout,
 	Card,
 	Checkbox,
 	Container,
@@ -16,7 +17,7 @@ import {
 } from "@radix-ui/themes";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
-import { ClipboardList, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, ClipboardList, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { todosCollection } from "@/db/collections/todos";
 import type { Todo } from "@/db/zod-schemas";
@@ -36,6 +37,7 @@ function TodoPage() {
 	const [newTitle, setNewTitle] = useState("");
 	const [deleteTarget, setDeleteTarget] = useState<Todo | null>(null);
 	const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+	const [mutationError, setMutationError] = useState<string | null>(null);
 
 	const { data: allTodos, isLoading } = useLiveQuery(
 		(q) =>
@@ -57,27 +59,45 @@ function TodoPage() {
 
 	const handleAdd = () => {
 		if (!newTitle.trim()) return;
-		todosCollection.insert({
+		setMutationError(null);
+		const tx = todosCollection.insert({
 			id: crypto.randomUUID(),
 			title: newTitle.trim(),
 			completed: false,
 			created_at: new Date(),
 			updated_at: new Date(),
 		});
+		tx.isPersisted.promise.catch((err: unknown) => {
+			setMutationError(
+				err instanceof Error ? err.message : "Failed to add todo",
+			);
+		});
 		setNewTitle("");
 		setAddOpen(false);
 	};
 
 	const handleToggle = (todo: Todo) => {
-		todosCollection.update(todo.id, (draft) => {
+		setMutationError(null);
+		const tx = todosCollection.update(todo.id, (draft) => {
 			draft.completed = !draft.completed;
 			draft.updated_at = new Date();
+		});
+		tx.isPersisted.promise.catch((err: unknown) => {
+			setMutationError(
+				err instanceof Error ? err.message : "Failed to update todo",
+			);
 		});
 	};
 
 	const handleDelete = () => {
 		if (!deleteTarget) return;
-		todosCollection.delete(deleteTarget.id);
+		setMutationError(null);
+		const tx = todosCollection.delete(deleteTarget.id);
+		tx.isPersisted.promise.catch((err: unknown) => {
+			setMutationError(
+				err instanceof Error ? err.message : "Failed to delete todo",
+			);
+		});
 		setDeleteTarget(null);
 	};
 
@@ -92,6 +112,16 @@ function TodoPage() {
 	return (
 		<Container size="2" py="6">
 			<Flex direction="column" gap="5">
+				{/* Error banner */}
+				{mutationError && (
+					<Callout.Root color="red">
+						<Callout.Icon>
+							<AlertCircle size={16} />
+						</Callout.Icon>
+						<Callout.Text>{mutationError}</Callout.Text>
+					</Callout.Root>
+				)}
+
 				{/* Header */}
 				<Flex justify="between" align="center">
 					<Flex direction="column" gap="1">

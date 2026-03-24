@@ -25,7 +25,10 @@ export const todosCollection = createCollection(
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(newTodo),
 			});
-			if (!res.ok) throw new Error("Failed to insert todo");
+			if (!res.ok)
+				throw new Error(
+					`Failed to insert todo: ${res.status} ${res.statusText}`,
+				);
 			const data = await res.json();
 			return { txid: data.txid };
 		},
@@ -36,7 +39,10 @@ export const todosCollection = createCollection(
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(updated),
 			});
-			if (!res.ok) throw new Error("Failed to update todo");
+			if (!res.ok)
+				throw new Error(
+					`Failed to update todo: ${res.status} ${res.statusText}`,
+				);
 			const data = await res.json();
 			return { txid: data.txid };
 		},
@@ -47,7 +53,10 @@ export const todosCollection = createCollection(
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ id: deleted.id }),
 			});
-			if (!res.ok) throw new Error("Failed to delete todo");
+			if (!res.ok)
+				throw new Error(
+					`Failed to delete todo: ${res.status} ${res.statusText}`,
+				);
 			const data = await res.json();
 			return { txid: data.txid };
 		},
