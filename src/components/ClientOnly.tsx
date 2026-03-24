@@ -1,7 +1,7 @@
-import type { ReactNode } from "react"
-import { useSyncExternalStore } from "react"
+import type { ReactNode } from "react";
+import { useSyncExternalStore } from "react";
 
-const emptySubscribe = () => () => {}
+const emptySubscribe = () => () => {};
 
 /**
  * Renders children only on the client. During SSR, renders the fallback.
@@ -15,13 +15,13 @@ export function ClientOnly({
 	children,
 	fallback,
 }: {
-	children: () => ReactNode
-	fallback?: ReactNode
+	children: () => ReactNode;
+	fallback?: ReactNode;
 }) {
 	const isClient = useSyncExternalStore(
 		emptySubscribe,
 		() => true,
 		() => false,
-	)
-	return isClient ? children() : (fallback ?? null)
+	);
+	return isClient ? children() : (fallback ?? null);
 }
